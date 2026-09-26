@@ -1,0 +1,16 @@
+# Maxfiy sozlamalar (parol, kalit, token)
+.env
+.env.*
+
+# Operatsion tizim yaratadigan fayllar
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Muharrir sozlamalari
+.vscode/
+.idea/
+
+# Loglar va vaqtinchalik fayllar
+*.log
+*.tmp
