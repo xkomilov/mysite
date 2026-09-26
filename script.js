@@ -122,4 +122,18 @@
   }
   updateScrollOffset();
   new ResizeObserver(updateScrollOffset).observe(header);
+  // Reveal sections softly the first time they scroll into view.
+  const revealItems = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    const revealObserver = new IntersectionObserver(function (items) {
+      items.forEach(function (item) {
+        if (!item.isIntersecting) return;
+        item.target.classList.add('is-visible');
+        revealObserver.unobserve(item.target);
+      });
+    }, { rootMargin: '0px 0px -10% 0px' });
+    revealItems.forEach(function (item) { revealObserver.observe(item); });
+  } else {
+    revealItems.forEach(function (item) { item.classList.add('is-visible'); });
+  }
 })();

@@ -241,3 +241,17 @@ html[data-theme="light"] .direction-number{color:#786021}
 .project-card h3 a:after{content:"";position:absolute;inset:0;border-radius:16px}
 .project-card:hover{border-color:var(--muted)}
 .project-link{margin-top:auto;align-self:flex-start;padding-bottom:2px;border-bottom:1px solid var(--line);font-size:.9375rem}
+
+/* Yengil jonlanish */
+@media(prefers-reduced-motion:no-preference){
+ .js .reveal{opacity:0;transform:translateY(14px);transition:opacity .45s ease-out,transform .45s ease-out}
+ .js .reveal.is-visible{opacity:1;transform:none}
+}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+ .project-card{transition:transform .2s ease-out,border-color .2s ease-out}
+ .project-card:hover,.project-card:focus-within{transform:translateY(-4px)}
+}
+@media(prefers-reduced-motion:no-preference){
+ .hero-content{animation:hero-in .5s ease-out both}
+}
+@keyframes hero-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
