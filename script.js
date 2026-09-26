@@ -4,20 +4,39 @@
   const languageSelect = document.getElementById('language-select');
   const meta = document.querySelector('meta[name="theme-color"]');
   const entries = [
-    [".nav-links a[href=\"#loyihalar\"]","Мои проекты","My projects"],
-    ["#projects-label","Проекты","Projects"],
-    ["#projects-title","Мои проекты","My projects"],
-    ["#project-1-status","Скоро","Coming soon"],
-    ["#project-1-title","Проект 01","Project 01"],
-    ["#project-1-description","Информация о проекте скоро появится.","Project details will be added soon."],
-    ["#project-2-status","Скоро","Coming soon"],
-    ["#project-2-title","Проект 02","Project 02"],
-    ["#project-2-description","Информация о проекте скоро появится.","Project details will be added soon."],
-    ["#project-3-status","Скоро","Coming soon"],
-    ["#project-3-title","Проект 03","Project 03"],
-    ["#project-3-description","Информация о проекте скоро появится.","Project details will be added soon."],
+    [".nav-links a[href=\"#ishlarim\"]","Мои работы","My work"],
+    ["#projects-label","Работы","Work"],
+    ["#projects-title","Мои работы","My work"],
+    ["#project-1-title","Работа 01","Work 01"],
+    ["#project-1-description","Информация о работе скоро появится.","Details will be added soon."],
+    ["#project-2-title","Работа 02","Work 02"],
+    ["#project-2-description","Информация о работе скоро появится.","Details will be added soon."],
+    ["#project-3-title","Работа 03","Work 03"],
+    ["#project-3-description","Информация о работе скоро появится.","Details will be added soon."],
+    [".nav-links a[href=\"#fikrlar\"]","Мнения","Feedback"],
+    ["#reviews-label","Отзывы","Reviews"],
+    ["#reviews-title","Мнения","Feedback"],
+    ["#review-1-text","Отзыв скоро появится.","Review coming soon."],
+    ["#review-1-name","Имя Фамилия","Full name"],
+    ["#review-1-role","Должность","Position"],
+    ["#review-2-text","Отзыв скоро появится.","Review coming soon."],
+    ["#review-2-name","Имя Фамилия","Full name"],
+    ["#review-2-role","Должность","Position"],
+    ["#review-3-text","Отзыв скоро появится.","Review coming soon."],
+    ["#review-3-name","Имя Фамилия","Full name"],
+    ["#review-3-role","Должность","Position"],
+    [".nav-links a[href=\"#savollar\"]","Вопросы","FAQ"],
+    ["#faq-label","Вопросы","Questions"],
+    ["#faq-title","Вопросы и ответы","Questions and answers"],
+    ["#faq-1-question","Кому вы помогаете?","Who do you help?"],
+    ["#faq-1-answer","Молодёжи, выбирающей профессию, а также сотрудникам службы санитарно-эпидемиологического благополучия и общественного здоровья. Консультирую по профориентации, работе с нормативными документами, подготовке к аттестации, правам сотрудников и охране труда.","Young people choosing a career, and sanitary and epidemiological welfare and public health staff. I advise on career guidance, working with regulatory documents, attestation preparation, employee rights and occupational safety."],
+    ["#faq-2-question","Как проходят занятия?","How are sessions held?"],
+    ["#faq-2-answer","Онлайн: через Telegram, по телефону или по видеосвязи. Связаться со мной можно из любого города.","Online: via Telegram, by phone or by video call. You can reach me from any city."],
+    ["#faq-3-question","Ваши консультации платные?","Do you charge for consultations?"],
+    ["#faq-3-answer","Нет, бесплатные. Моя цель — передать свой опыт молодёжи и коллегам.","No, they are free. My aim is to pass on my experience to young people and colleagues."],
+    ["#faq-4-question","Как с вами связаться?","How can I contact you?"],
+    ["#faq-4-answer","Напишите в Telegram (@xkomilov) или позвоните по номеру +998 90 588 04 50. Кратко опишите свой вопрос — я отвечу как можно скорее.","Message me on Telegram (@xkomilov) or call +998 90 588 04 50. Briefly describe your question and I will reply as soon as I can."],
     ['.contact-note', 'Есть вопрос? Напишите — я отвечу.', 'Have a question? Write to me — I will reply.'],
-    ['.nav-links a[href="#bosh"]', 'Главная', 'Home'],
     ['.nav-links a[href="#xizmatlar"]', 'Направления', 'Areas of practice'],
     ['.nav-links a[href="#aloqa"]', 'Контакты', 'Contact'],
     ['.kicker', 'Школа наставничества', 'Mentorship school'],
@@ -93,4 +112,11 @@
     updateTheme();
   });
   updateLanguage();
+  // Keep section titles below the sticky header when jumping from the menu.
+  const header = document.querySelector('.site-header');
+  function updateScrollOffset() {
+    document.documentElement.style.scrollPaddingTop = header.offsetHeight + 'px';
+  }
+  updateScrollOffset();
+  new ResizeObserver(updateScrollOffset).observe(header);
 })();
