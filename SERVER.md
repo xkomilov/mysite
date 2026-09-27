@@ -29,13 +29,16 @@ Holat sanasi: **2026-09-27**. Versiyalar avtomatik yangilanishlar bilan o‘zgar
 
 | Dastur | Versiya | Izoh |
 |---|---|---|
-| Caddy | v2.11.4 | Veb-server, HTTPS sertifikatlarini o‘zi oladi va yangilaydi. Rasmiy apt manbasidan |
+| Caddy | v2.11.4 | Veb-server, HTTPS sertifikatlarini o‘zi oladi va yangilaydi. Rasmiy manba: `dl.cloudsmith.io` |
+| Node.js | v24.21.0 (LTS) | npm 11.19.0 bilan. Rasmiy manba: NodeSource (`deb.nodesource.com`); Ubuntu’ning eskiroq 22-versiyasidan ustun qo‘yilgan |
+| Docker Engine | 29.8.1 | Rasmiy manba: `download.docker.com`. containerd 2.3.6 |
+| Docker Compose | 5.5.1 | Docker plagini (`docker compose`) |
 | Git | 2.53.0 | Saytni GitHub’dan tortib olish uchun |
 | OpenSSH | 10.2p1 | Serverga kirish |
 | ufw | 0.36.2 | Server ichidagi firewall |
-| unattended-upgrades | 2.12ubuntu9 | Xavfsizlik yangilanishlarini avtomatik o‘rnatadi |
-| Node.js | — | O‘rnatilmagan |
-| Docker | — | O‘rnatilmagan |
+| unattended-upgrades | 2.12ubuntu9 | Yangilanishlarni avtomatik o‘rnatadi: Ubuntu paketlari, hamda Docker, Node.js va Caddy manbalari |
+
+Hozircha serverda birorta ham Docker konteyneri ishlamaydi va Node.js ilovasi yo‘q — ular kurs topshiriqlari uchun o‘rnatilgan.
 
 ## Domen va DNS
 
@@ -71,7 +74,8 @@ Doimiy ishlaydigan va taymer xizmatlar:
 |---|---|
 | `caddy` | Saytni HTTPS bilan beradi |
 | `site-update.timer` | Har daqiqada GitHub’ni tekshiradi, yangi commit bo‘lsa saytni yangilaydi |
-| `unattended-upgrades` | Xavfsizlik yangilanishlarini har kuni o‘rnatadi; kerak bo‘lsa 23:00 UTC da (04:00 Toshkent) serverni qayta yuklaydi |
+| `docker`, `containerd` | Docker konteynerlarini ishga tushiradi (hozircha konteyner yo‘q, eshik ochmagan) |
+| `unattended-upgrades` | Yangilanishlarni har kuni o‘rnatadi (Ubuntu + Docker, Node.js, Caddy manbalari); kerak bo‘lsa 23:00 UTC da (04:00 Toshkent) serverni qayta yuklaydi. Docker yangilanganda konteynerlar bir necha soniyaga qayta ishga tushadi |
 | `ufw` | Server ichidagi firewall |
 | `chrony` | Server soatini aniq ushlab turadi |
 
@@ -79,6 +83,13 @@ Doimiy ishlaydigan va taymer xizmatlar:
 
 - **Hetzner Cloud Firewall** (`web-firewall`): kiruvchi TCP 22, 80, 443.
 - **ufw** (server ichida): standart holda hamma kiruvchi ulanish taqiqlangan; 22-port hammaga, 80/443 faqat Cloudflare’ning rasmiy IP diapazonlariga (22 ta qoida, `# Cloudflare` izohi bilan). Cloudflare yangi diapazon qo‘shsa, ro‘yxatni `cloudflare.com/ips-v4` va `cloudflare.com/ips-v6` dan yangilash kerak.
+
+## Docker qoidalari
+
+- `/etc/docker/daemon.json` da `"ip": "127.0.0.1"`: `-p 8080:80` kabi ochilgan eshiklar standart holda **faqat serverning ichida** ochiladi. Docker ufw’ni chetlab o‘tishi mumkin, shu sozlama bunga yo‘l qo‘ymaydi. Ilovani internetga chiqarish — Caddy orqali (`reverse_proxy 127.0.0.1:8080`) va Cloudflare’dagi subdomen bilan.
+- Eshikni `-p 0.0.0.0:...` bilan to‘g‘ridan-to‘g‘ri ochmang.
+- `"log-driver": "local"`: konteyner loglari hajmi cheklangan, disk to‘lib qolmaydi.
+- Sirlar (bot tokenlari, baza parollari) — serverdagi `.env` fayllarida, git’ga tushmaydi.
 
 ## Sayt qanday yangilanadi
 
@@ -100,6 +111,8 @@ Saytda ochilmaydigan fayllar (404): `.git`, `.gitignore`, `CNAME` va barcha `*.m
 | `/etc/systemd/system/site-update.service`, `.timer` | Yangilash xizmati va taymeri |
 | `/etc/ssh/sshd_config.d/10-hardening.conf` | SSH xavfsizlik sozlamalari |
 | `/etc/apt/apt.conf.d/52-auto-reboot` | Avtomatik qayta yuklash vaqti |
+| `/etc/apt/apt.conf.d/51-third-party-origins` | Docker, Node.js va Caddy manbalarini avtomatik yangilash |
+| `/etc/docker/daemon.json` | Docker sozlamasi (eshiklar faqat 127.0.0.1 da, log hajmi cheklangan) |
 
 ## Loglarni qayerdan ko‘rish
 
@@ -113,6 +126,9 @@ Avval serverga kiring: `ssh root@<server-IP>`.
 | SSH kirishlar va urinishlar | `journalctl -u ssh --since today` |
 | Avtomatik yangilanishlar | `less /var/log/unattended-upgrades/unattended-upgrades.log` |
 | Firewall bloklagan ulanishlar | `journalctl -k --since today \| grep UFW` |
+| Docker xizmatining o‘zi | `journalctl -u docker --since today` |
+| Ishlayotgan konteynerlar | `docker ps` |
+| Konteyner loglari — jonli | `docker logs -f <konteyner-nomi>` |
 | Ishlamay qolgan xizmatlar | `systemctl --failed` |
 | Taymerlar qachon ishlaydi | `systemctl list-timers` |
 
