@@ -1,6 +1,8 @@
 # Server holati — xayrullokomilov.uz
 
-Holat sanasi: **2026-09-28**. Versiyalar avtomatik yangilanishlar bilan o‘zgarib boradi.
+Holat sanasi: **2026-10-02**. Versiyalar avtomatik yangilanishlar bilan o‘zgarib boradi.
+
+> **2026-10-02 dan bu repodagi sayt (`index.html`) serverda ko‘rsatilmaydi.** `xayrullokomilov.uz` da kutubxona (SES Yordamchisi) ishlaydi, muallif sahifasi uning ichida — `/muallif`. Saytning server nusxasi, `site-update.timer` va `sitedeploy` foydalanuvchisi o‘chirilgan.
 
 > Bu faylda sirlar yo‘q: parol, SSH kalit, token va serverning IP manzillari yozilmagan.
 > Repo ochiq, IP manzil esa Cloudflare ortida yashirin turishi kerak.
@@ -31,14 +33,14 @@ Holat sanasi: **2026-09-28**. Versiyalar avtomatik yangilanishlar bilan o‘zgar
 |---|---|---|
 | Caddy | v2.11.4 | Veb-server, HTTPS sertifikatlarini o‘zi oladi va yangilaydi. Rasmiy manba: `dl.cloudsmith.io` |
 | Node.js | v24.21.0 (LTS) | npm 11.19.0 bilan. Rasmiy manba: NodeSource (`deb.nodesource.com`); Ubuntu’ning eskiroq 22-versiyasidan ustun qo‘yilgan |
-| Docker Engine | 29.8.1 | Rasmiy manba: `download.docker.com`. containerd 2.3.6 |
+| Docker Engine | 29.8.2 | Rasmiy manba: `download.docker.com`. containerd 2.3.6 |
 | Docker Compose | 5.5.1 | Docker plagini (`docker compose`) |
-| Git | 2.53.0 | Saytni GitHub’dan tortib olish uchun |
+| Git | 2.53.0 | Bot va kutubxonani GitHub’dan tortib olish uchun |
 | OpenSSH | 10.2p1 | Serverga kirish |
 | ufw | 0.36.2 | Server ichidagi firewall |
 | unattended-upgrades | 2.12ubuntu9 | Yangilanishlarni avtomatik o‘rnatadi: Ubuntu paketlari, hamda Docker, Node.js va Caddy manbalari |
 
-Node.js’da bitta ilova ishlaydi: Telegram bot **myagent** (pastda — [Telegram bot (myagent)](#telegram-bot-myagent)). Docker konteynerlari hozircha yo‘q.
+Node.js’da ikkita ilova ishlaydi: Telegram bot **myagent** (pastda — [Telegram bot (myagent)](#telegram-bot-myagent)) va **kutubxona** — Next.js (pastda — [Kutubxona](#kutubxona-ses-yordamchisi)). Docker’da bitta konteyner bor: kutubxona bazasi (PostgreSQL 17).
 
 ## Domen va DNS
 
@@ -57,7 +59,7 @@ Cloudflare sozlamalari:
 - **Caching → Browser Cache TTL:** Respect Existing Headers.
 - **Proxy’ni o‘chirmang:** server 80/443 eshiklarida faqat Cloudflare’dan kelgan ulanishlarni qabul qiladi.
 
-Eski manzil `xkomilov.github.io/mysite` GitHub Pages orqali `xayrullokomilov.uz` ga yo‘naltiriladi (repo’dagi `CNAME` fayli shuning uchun kerak).
+Eski manzil `xkomilov.github.io/mysite` GitHub Pages orqali `xayrullokomilov.uz` ga yo‘naltiriladi (repo’dagi `CNAME` fayli shuning uchun kerak). Endi u kutubxona bosh sahifasiga olib boradi.
 
 ## Ishlab turgan xizmatlar va portlar
 
@@ -66,7 +68,9 @@ Eski manzil `xkomilov.github.io/mysite` GitHub Pages orqali `xayrullokomilov.uz`
 | SSH (`sshd`) | 22/tcp | Hammaga; faqat SSH kalit bilan, parol bilan kirish o‘chirilgan |
 | Caddy (sayt) | 80/tcp, 443/tcp | Faqat Cloudflare IP manzillariga |
 | Caddy (boshqaruv API) | 2019/tcp | Faqat serverning o‘zi (127.0.0.1) |
-| Telegram bot (`myagent`) | 3000/tcp | Faqat serverning o‘zi (127.0.0.1); tashqaridan Caddy orqali `/tg-webhook` |
+| Telegram bot (`myagent`) | 3000/tcp | Faqat serverning o‘zi (127.0.0.1); tashqaridan Caddy orqali `/tg-webhook`, `/ofis` |
+| Kutubxona (`kutubxona`, Next.js) | 3001/tcp | Faqat serverning o‘zi (127.0.0.1); tashqaridan Caddy orqali (qolgan barcha yo‘llar) |
+| PostgreSQL (Docker, `kutubxona-db-postgres-1`) | 5432/tcp | Faqat serverning o‘zi (127.0.0.1) |
 | systemd-resolved (DNS) | 53 | Faqat serverning o‘zi |
 
 Doimiy ishlaydigan va taymer xizmatlar:
@@ -74,10 +78,11 @@ Doimiy ishlaydigan va taymer xizmatlar:
 | Nomi | Vazifasi |
 |---|---|
 | `caddy` | Saytni HTTPS bilan beradi |
-| `site-update.timer` | Har daqiqada GitHub’ni tekshiradi, yangi commit bo‘lsa saytni yangilaydi |
 | `myagent` | Telegram bot; yiqilsa 3 soniyada, server qayta yuklanganda esa o‘zi ishga tushadi |
 | `myagent-update.timer` | Har daqiqada bot repo’sini tekshiradi, yangi commit bo‘lsa botni yangilab, qayta ishga tushiradi |
-| `docker`, `containerd` | Docker konteynerlarini ishga tushiradi (hozircha konteyner yo‘q, eshik ochmagan) |
+| `kutubxona` | Kutubxona (Next.js); server qayta yuklanganda o‘zi ishga tushadi |
+| `kutubxona-update.timer` | Har daqiqada kutubxona repo’sini tekshiradi, yangi commit bo‘lsa yig‘ib, almashtiradi |
+| `docker`, `containerd` | Docker konteynerlarini ishga tushiradi (kutubxona bazasi; eshigi faqat 127.0.0.1 da) |
 | `unattended-upgrades` | Yangilanishlarni har kuni o‘rnatadi (Ubuntu + Docker, Node.js, Caddy manbalari); kerak bo‘lsa 23:00 UTC da (04:00 Toshkent) serverni qayta yuklaydi. Docker yangilanganda konteynerlar bir necha soniyaga qayta ishga tushadi |
 | `ufw` | Server ichidagi firewall |
 | `chrony` | Server soatini aniq ushlab turadi |
@@ -94,15 +99,17 @@ Doimiy ishlaydigan va taymer xizmatlar:
 - `"log-driver": "local"`: konteyner loglari hajmi cheklangan, disk to‘lib qolmaydi.
 - Sirlar (bot tokenlari, baza parollari) — serverdagi `.env` fayllarida, git’ga tushmaydi.
 
-## Sayt qanday yangilanadi
+## Manzillar (Caddy)
 
-1. Kompyuterda o‘zgartirish → `git commit` → `git push`.
-2. Serverdagi `site-update.timer` bir daqiqa ichida GitHub’dagi `main` tarmog‘ini tortib oladi.
-3. Buni huquqi cheklangan `sitedeploy` tizim foydalanuvchisi bajaradi (parolsiz, SSH orqali kira olmaydi). Repo ochiq, shuning uchun hech qanday sir kerak emas.
+`/etc/caddy/Caddyfile` da `xayrullokomilov.uz` yo‘llari quyidagicha bo‘lingan (`www` → asosiy domenga yo‘naltiriladi):
 
-HTML, CSS va JS `Cache-Control: no-cache` bilan beriladi, shuning uchun o‘zgarish darhol ko‘rinadi. Rasmlar keshlanadi: rasmni almashtirganda faylga yangi nom bering.
+| Yo‘l | Kim beradi |
+|---|---|
+| `/tg-webhook`, `/ofis`, `/ofis/jurnal` | Telegram bot — `127.0.0.1:3000` |
+| `/kover/*` | Bot yozgan rasmlar — `/var/lib/myagent/kover` |
+| Qolgan hammasi, jumladan `/muallif` | Kutubxona — `127.0.0.1:3001` |
 
-Saytda ochilmaydigan fayllar (404): `.git`, `.gitignore`, `CNAME` va barcha `*.md` fayllar (shu jumladan bu fayl).
+Caddyfile’ning asl nusxasi — kutubxona repo’sidagi `deploy/Caddyfile`. O‘zgartirishdan oldin nusxa oling (`Caddyfile.bak-<sana>`), `caddy validate` bilan tekshiring va bot yo‘llari ishlashini solishtiring.
 
 ## Telegram bot (myagent)
 
@@ -122,21 +129,32 @@ Kod: GitHub’dagi **yopiq** `xkomilov/myagent` repo. Bot Gemini orqali javob be
 
 Yangilash skripti va systemd fayllarining asl nusxasi repo’dagi `deploy/` papkasida. Ularni o‘zgartirsangiz, serverga qo‘lda qayta o‘rnatish kerak (`install` + `systemctl daemon-reload`) — avtodeploy faqat bot kodini yangilaydi.
 
+## Kutubxona (SES Yordamchisi)
+
+Kod: GitHub’dagi **yopiq** `xkomilov/kutubxona` repo (Next.js + PostgreSQL). Sayt manzili — `https://xayrullokomilov.uz/`, muallif sahifasi — `/muallif`.
+
+- Ilova `kutubxona` tizim foydalanuvchisi nomidan `127.0.0.1:3001` da ishlaydi, tashqaridan faqat Caddy orqali.
+- Baza — Docker’dagi PostgreSQL 17 (`kutubxona-db-postgres-1`), eshigi faqat `127.0.0.1:5432` da.
+- **Sirlar** faqat serverda: `/opt/kutubxona/shared/.env` (AI kaliti va boshqalar), `/opt/kutubxona/db/.env` (baza paroli). Git’ga tushmaydi.
+- **Yangilanish:** `git push` → `kutubxona-update.timer` bir daqiqa ichida `main` ni tortib, yangi versiyani `/opt/kutubxona/releases/<commit>` ga yig‘adi va almashtiradi. Yangi versiya ishga tushmasa, oldingisiga qaytadi. Git `kutubxonadeploy` foydalanuvchisi nomidan, faqat o‘qiy oladigan deploy key bilan ishlaydi.
+- O‘rnatish tartibi, skriptlar va Caddyfile’ning asl nusxasi — kutubxona repo’sidagi `deploy/` papkasi (`deploy/README.md`).
+
 ## Muhim fayllar serverda
 
 | Fayl yoki papka | Nima |
 |---|---|
-| `/var/www/xayrullokomilov.uz/` | Sayt fayllari (GitHub repo nusxasi) |
 | `/etc/caddy/Caddyfile` | Caddy sozlamasi; oldingi holatlar `Caddyfile.bak-*` |
-| `/usr/local/bin/site-update` | Saytni yangilash skripti |
-| `/etc/systemd/system/site-update.service`, `.timer` | Yangilash xizmati va taymeri |
 | `/opt/myagent/` | Telegram bot (GitHub repo nusxasi) |
 | `/opt/myagent/.env` | Bot sirlari va sozlamalari (`AI_MODEL`, `AI_FALLBACK_MODEL` ham shu yerda) |
 | `/usr/local/bin/myagent-update` | Botni yangilash skripti |
 | `/etc/systemd/system/myagent.service` | Bot xizmati |
 | `/etc/systemd/system/myagent-update.service`, `.timer` | Bot yangilash xizmati va taymeri |
 | `/var/lib/myagent-deploy/.ssh/` | GitHub deploy key (faqat o‘qish) |
-| `/opt/myagent.old-*` | Avtodeploy’dan oldingi qo‘lda o‘rnatilgan nusxa; bot bir-ikki kun barqaror ishlasa, o‘chirsa bo‘ladi |
+| `/opt/kutubxona/releases/<commit>`, `/opt/kutubxona/current` | Kutubxona versiyalari va ishlab turgani |
+| `/opt/kutubxona/shared/.env` | Kutubxona sirlari (root:kutubxona, `640`); baza paroli — `/opt/kutubxona/db/.env` |
+| `/usr/local/bin/kutubxona-update` | Kutubxonani yangilash skripti |
+| `/etc/systemd/system/kutubxona.service`, `kutubxona-update.service`, `.timer` | Kutubxona xizmati, yangilash xizmati va taymeri |
+| `/var/lib/kutubxona-deploy/.ssh/` | Kutubxona uchun GitHub deploy key (faqat o‘qish) |
 | `/etc/ssh/sshd_config.d/10-hardening.conf` | SSH xavfsizlik sozlamalari |
 | `/etc/apt/apt.conf.d/52-auto-reboot` | Avtomatik qayta yuklash vaqti |
 | `/etc/apt/apt.conf.d/51-third-party-origins` | Docker, Node.js va Caddy manbalarini avtomatik yangilash |
@@ -150,9 +168,11 @@ Avval serverga kiring: `ssh root@<server-IP>`.
 |---|---|
 | Caddy (sayt, sertifikatlar) — jonli | `journalctl -u caddy -f` |
 | Caddy — oxirgi 100 qator | `journalctl -u caddy -n 100 --no-pager` |
-| Sayt yangilanishlari | `journalctl -u site-update --since today` |
 | Telegram bot — jonli | `journalctl -u myagent -f` |
 | Bot yangilanishlari (avtodeploy) | `journalctl -u myagent-update --since today` |
+| Kutubxona — jonli | `journalctl -u kutubxona -f` |
+| Kutubxona yangilanishlari | `journalctl -u kutubxona-update --since today` |
+| Kutubxona bazasi | `docker logs kutubxona-db-postgres-1` |
 | SSH kirishlar va urinishlar | `journalctl -u ssh --since today` |
 | Avtomatik yangilanishlar | `less /var/log/unattended-upgrades/unattended-upgrades.log` |
 | Firewall bloklagan ulanishlar | `journalctl -k --since today \| grep UFW` |
@@ -168,7 +188,8 @@ Avval serverga kiring: `ssh root@<server-IP>`.
 |---|---|
 | Caddy sozlamasini tekshirish | `caddy validate --config /etc/caddy/Caddyfile` |
 | Caddy’ni qayta yuklash (to‘xtatmasdan) | `systemctl reload caddy` |
-| Saytni hoziroq yangilash | `systemctl start site-update.service` |
+| Kutubxonani hoziroq yangilash | `systemctl start kutubxona-update.service` |
+| Kutubxonani qayta ishga tushirish (`.env` o‘zgargach) | `systemctl restart kutubxona` |
 | Botni hoziroq yangilash | `systemctl start myagent-update.service` |
 | Botni qayta ishga tushirish (masalan `.env` o‘zgargach) | `systemctl restart myagent` |
 | Bot holati | `systemctl status myagent` |
